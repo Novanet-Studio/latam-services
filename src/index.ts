@@ -18,7 +18,7 @@ app.post(
   "/get-client-details",
   async ({ body, set }) => {
     try {
-      const response = await fetch(`${userApiUrl}/GetClientsDetails`, {
+      const response = await fetch(`${userApiUrl}/api/v1/GetClientsDetails`, {
         method: "POST",
         body: JSON.stringify({
           token: userApiKey,
@@ -44,6 +44,80 @@ app.post(
   {
     body: t.Object({
       cedula: t.String(),
+    }),
+  }
+);
+
+app.post(
+  "/consulta-deuda",
+  async ({ body, set }) => {
+    try {
+      const response = await fetch(`${userApiUrl}/facilito/consultadeuda`, {
+        method: "POST",
+        body: JSON.stringify({
+          token: userApiKey,
+          cedula: body.cedula,
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const json = await response.json();
+
+      return json;
+    } catch (error) {
+      set.status = "Internal Server Error";
+
+      return {
+        status: "Internal Server Error",
+        error: "Error interno de servidor",
+      };
+    }
+  },
+  {
+    body: t.Object({
+      cedula: t.String(),
+    }),
+  }
+);
+
+app.post(
+  "/registrar-pago",
+  async ({ body, set }) => {
+    try {
+      const response = await fetch(`${userApiUrl}/facilito/registrarpago`, {
+        method: "POST",
+        body: JSON.stringify({
+          token: userApiKey,
+          IDFactura: body.IDFactura,
+          valor: body.valor,
+          fecha: body.fecha,
+          secuencial: body.secuencial,
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const json = await response.json();
+
+      return json;
+    } catch (error) {
+      set.status = "Internal Server Error";
+
+      return {
+        status: "Internal Server Error",
+        error: "Error interno de servidor",
+      };
+    }
+  },
+  {
+    body: t.Object({
+      IDFactura: t.String(),
+      valor: t.Number(),
+      fecha: t.String(),
+      secuencial: t.String(),
     }),
   }
 );
