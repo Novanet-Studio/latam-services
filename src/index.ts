@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { cors } from "@elysiajs/cors";
 
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 8001;
 const userApiKey = process.env.USERS_API_KEY;
 const userApiUrl = process.env.USERS_API_URL;
 const btApiUrl = process.env.BT_BASE_API_URL;
@@ -34,6 +34,8 @@ app.post(
       return json;
     } catch (error) {
       set.status = "Internal Server Error";
+
+      console.log("[get-client-details] =>", error)
 
       return {
         status: "Internal Server Error",
@@ -69,6 +71,8 @@ app.post(
     } catch (error) {
       set.status = "Internal Server Error";
 
+      console.log("[consulta-deuda] => ", error)
+
       return {
         status: "Internal Server Error",
         error: "Error interno de servidor",
@@ -86,15 +90,17 @@ app.post(
   "/registrar-pago",
   async ({ body, set }) => {
     try {
+      const payload = {
+        token: userApiKey,
+        IDFactura: body.IDFactura,
+        valor: body.valor,
+        fecha: body.fecha,
+        secuencial: body.secuencial,
+      };
+
       const response = await fetch(`${userApiUrl}/facilito/registrarpago`, {
         method: "POST",
-        body: JSON.stringify({
-          token: userApiKey,
-          IDFactura: body.IDFactura,
-          valor: body.valor,
-          fecha: body.fecha,
-          secuencial: body.secuencial,
-        }),
+        body: JSON.stringify(payload),
         headers: {
           'Content-Type': 'application/json'
         }
@@ -106,6 +112,8 @@ app.post(
     } catch (error) {
       set.status = "Internal Server Error";
 
+      console.log("[registrar-pago] => ", error)
+
       return {
         status: "Internal Server Error",
         error: "Error interno de servidor",
@@ -114,10 +122,10 @@ app.post(
   },
   {
     body: t.Object({
-      IDFactura: t.String(),
+      IDFactura: t.Number(),
       valor: t.Number(),
       fecha: t.String(),
-      secuencial: t.String(),
+      secuencial: t.Number(),
     }),
   }
 );
