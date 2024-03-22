@@ -200,7 +200,7 @@ app.post(
         token: body.token,
         concepto: `Pago de servicios de ${body.nombre}`,
         codAfiliado: bussinessAfiliatedCode,
-        comercio: bussinessName,
+        comercio: '',
       }
 
       console.info("[BT => BOTON_DE_PAGO => PAYLOAD] ==>> ", JSON.stringify(payload, null, 2))
