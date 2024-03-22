@@ -190,20 +190,24 @@ app.post(
   "/pago",
   async ({ body, set }) => {
     try {
+      const payload = {
+        canal: "06",
+        celular: body.celular,
+        banco: body.banco,
+        RIF: bussinessRif,
+        cedula: body.cedula,
+        monto: body.monto,
+        token: body.token,
+        concepto: `Pago de servicios de ${body.nombre}`,
+        codAfiliado: bussinessAfiliatedCode,
+        comercio: bussinessName,
+      }
+
+      console.info("[BT => BOTON_DE_PAGO => PAYLOAD] ==>> ", JSON.stringify(payload, null, 2))
+
       const response = await fetch(`${btApiUrl}/botonDePago/pago`, {
         method: "POST",
-        body: JSON.stringify({
-          canal: "06",
-          celular: body.celular,
-          banco: body.banco,
-          RIF: bussinessRif,
-          cedula: body.cedula,
-          monto: body.monto,
-          token: body.token,
-          concepto: `Pago de servicios de ${body.nombre}`,
-          codAfiliado: bussinessAfiliatedCode,
-          comercio: bussinessName,
-        }),
+        body: JSON.stringify(payload),
         headers: {
           "Content-Type": "application/json",
         },
