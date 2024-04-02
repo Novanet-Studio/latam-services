@@ -215,6 +215,8 @@ app.post(
 
       const json = await response.json();
 
+      console.info("[BT => BOTON_DE_PAGO => RESPONSE] => ", JSON.stringify(json, null, 2))
+
       return json;
     } catch (error) {
       set.status = "Internal Server Error";
