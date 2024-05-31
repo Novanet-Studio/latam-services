@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 
 const miBancoApiUrl = process.env.MIBANCO_API_URL;
+const miBancoToken = process.env.MIBANCO_TOKEN;
 
 interface Params {
   body?: any;
@@ -13,6 +14,7 @@ async function requestOTPController({ body, set }: Params) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${miBancoToken}`
       },
       body: JSON.stringify(body)
     });
@@ -32,10 +34,11 @@ async function requestOTPController({ body, set }: Params) {
 
 async function makePaymentController({ body, set }: Params) {
   try {
-    const response = await fetch(`${miBancoApiUrl}/coremfibp/api/v1/json/bcoemi/enviar/`, {
+    const response = await fetch(`${miBancoApiUrl}/coremfibp/api/v1/json/bcoemi/enviar/ddinme`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${miBancoToken}`
       },
       body: JSON.stringify(body)
     });
