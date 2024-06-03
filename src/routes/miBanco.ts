@@ -24,7 +24,8 @@ async function requestOTPController({ body, set }: Params) {
     return json;
   } catch (error) {
     set.status = "Internal Server Error";
-
+    console.error("MI_BANCO [request-otp] => ", JSON.stringify(error, null, 2));
+    
     return {
       status: "Internal Server Error",
       error: "Error interno de servidor",
@@ -47,8 +48,9 @@ async function makePaymentController({ body, set }: Params) {
 
     return json;
   } catch (error) {
-    
     set.status = "Internal Server Error";
+
+    console.error("MI_BANCO [pay execution] => ", JSON.stringify(error, null, 2));
 
     return {
       status: "Internal Server Error",
