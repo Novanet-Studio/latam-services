@@ -21,9 +21,13 @@ async function fetchBanksController({ set }: Params) {
 
     const json = await response.json();
 
+    console.info("[BT => BANKS] => ", JSON.stringify(json, null, 2))
+
     return json;
   } catch (error) {
     set.status = "Internal Server Error";
+
+    console.info("[BT => ERROR => BANKS] => ", JSON.stringify(error, null, 2))
 
     return {
       status: "Internal Server Error",
