@@ -87,8 +87,6 @@ async function notifyController({ store, body, set }: Params) {
       store.data = body;
     }
 
-    console.log(store)
-
     return { message: "Solicitud recibida" };
   } catch (error) {
     console.log("Notify Controller => ", JSON.stringify(error, null, 2));
