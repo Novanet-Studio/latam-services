@@ -10,6 +10,12 @@ interface Params {
   set: any;
 }
 
+function getConcept(name: string) {
+  const shortName = name.trim().split(" ").length > 1 ? name.split(" ")[0] : name
+
+  return `Pago de servicios de ${shortName}`
+}
+
 async function fetchBanksController({ set }: Params) {
   try {
     const response = await fetch(`${btApiUrl}/bancos`, {
@@ -72,12 +78,12 @@ async function makePaymentController({ body, set }: Params) {
       cedula: body.cedula,
       monto: body.monto,
       token: body.token,
-      concepto: `Pago de servicios de ${body.nombre}`,
+      concepto: getConcept(body.nombre),
       codAfiliado: bussinessAfiliatedCode,
       comercio: '',
     }
 
-    console.info("[BT => BOTON_DE_PAGO => PAYLOAD] ==>> ", JSON.stringify(payload, null, 2))
+    console.info("[BT => BOTON_DE_PAGO => PAYLOAD] => ", JSON.stringify(payload, null, 2))
 
     const response = await fetch(`${btApiUrl}/botonDePago/pago`, {
       method: "POST",
