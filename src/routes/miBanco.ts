@@ -87,6 +87,8 @@ async function notifyController({ store, body, set }: Params) {
       store.data = body;
     }
 
+    console.info("[MI_BANCO => NOTIFICATION MIDDLEWARE] => ", JSON.stringify(body, null, 2))
+
     return { message: "Solicitud recibida" };
   } catch (error) {
     console.log("Notify Controller => ", JSON.stringify(error, null, 2));
@@ -115,6 +117,8 @@ async function emitSSEController({ store, set }: Params) {
       });
 
       store.canNotify = false;
+
+      console.info("[MI_BANCO => NOTIFICATION SSE] => ", JSON.stringify(store!.data, null, 2))
 
       return response;
     }
