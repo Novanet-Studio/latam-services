@@ -123,7 +123,17 @@ async function emitSSEController({ store, set }: Params) {
       return response;
     }
 
-    return { message: "OK" };
+    // return { message: "OK" };
+    return new Stream((stream) => {
+      const interval = setInterval(() => {
+        stream.send({ message: 'OK' });
+      }, 500);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        stream.close();
+      }, 3000);
+    });
   } catch (error) {
     console.log("SSE Controller => ", JSON.stringify(error, null, 2));
     set.status = 500
