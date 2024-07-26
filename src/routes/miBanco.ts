@@ -104,6 +104,7 @@ async function notifyController({ store, body, set }: Params) {
 
 async function emitSSEController({ store, set }: Params) {
   try {
+    console.log('store?.canNotify ->', store?.canNotify)
     if (store?.canNotify) {
       const response = new Stream((stream) => {
         const interval = setInterval(() => {
