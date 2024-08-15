@@ -27,7 +27,7 @@ async function fetchBanksController({ set }: Params) {
 
     const json = await response.json();
 
-    console.info("[BT => BANKS] => ", JSON.stringify(json, null, 2))
+    console.info("[BT => BANKS] => ", JSON.stringify(json[0] || {}, null, 2))
 
     return json;
   } catch (error) {
