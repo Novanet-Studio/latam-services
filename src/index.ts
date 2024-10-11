@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { logger } from "@chneau/elysia-logger";
+import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import routes from "./routes";
 
@@ -9,6 +10,7 @@ const app = new Elysia({ prefix: "/api" });
 
 app.use(cors());
 app.use(logger());
+app.use(swagger());
 
 // Routes
 app.use(routes);
