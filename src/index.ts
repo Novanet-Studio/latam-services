@@ -4,7 +4,7 @@ import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 import routes from "./routes";
 
-const PORT = Number(process.env.PORT) || 8001;
+const port = Number(process.env.PORT) || 8001;
 
 const app = new Elysia({ prefix: "/api" });
 
@@ -16,7 +16,7 @@ app.use(swagger());
 app.use(routes);
 
 // Run server
-app.listen(PORT);
+app.listen(port);
 
 console.log(
   `🦊 LATAM services is running at ${app.server?.hostname}:${app.server?.port}`

@@ -1,9 +1,15 @@
-# Elysia with Bun runtime
+# Latam Services
+
+This is just a simple API bridge to the Latam services, where:
+
+- [src/users](./src/users/users.router.ts): Manage the mikrowisp users API.
+- [src/bancoTesoro](./src/bancoTesoro/bt.router.ts): Manage the Banco Tesoro services.
+- [src/miBanco](./src/miBanco/miBanco.router.ts): Manage the MiBanco services.
 
 ## Getting Started
-To get started with this template, simply paste this command into your terminal:
+To get started you need to install the dependencies:
 ```bash
-bun create elysia ./elysia-example
+bun install
 ```
 
 ## Development

@@ -1,7 +1,7 @@
 import Elysia from "elysia";
-import usersRouter from "../users/users.router";
-import btRouter from "../bancoTesoro/bt.router";
-import miBancoRouter from "../miBanco/miBanco.router";
+import btRouter from "./bancoTesoro/bt.router";
+import miBancoRouter from "./miBanco/miBanco.router";
+import usersRouter from "./users/users.router";
 
 const routes = new Elysia({ prefix: "/v1" });
 
