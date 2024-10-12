@@ -1,5 +1,6 @@
 import { Stream } from "@elysiajs/stream";
 import { payment, requestOTP } from "./miBanco.service";
+import Logger from "../logger";
 
 interface Params {
   body?: any;
@@ -10,6 +11,8 @@ interface Params {
   };
 }
 
+const logger = new Logger("miBanco");
+
 export async function requestOTPHandler({ body, set }: Params) {
   try {
     const response = await requestOTP(body);
@@ -18,7 +21,7 @@ export async function requestOTPHandler({ body, set }: Params) {
     return json;
   } catch (error) {
     set.status = "Internal Server Error";
-    console.error("MI_BANCO [request-otp] => ", JSON.stringify(error, null, 2));
+    logger.info(error, "request_otp_error");
 
     return {
       status: "Internal Server Error",
@@ -36,10 +39,7 @@ export async function makePaymentHandler({ body, set }: Params) {
   } catch (error) {
     set.status = "Internal Server Error";
 
-    console.error(
-      "MI_BANCO [pay execution] => ",
-      JSON.stringify(error, null, 2)
-    );
+    logger.info(error, "payment_execution_error");
 
     return {
       status: "Internal Server Error",
@@ -61,14 +61,11 @@ export async function notifyHandler({ store, body, set }: Params) {
       store.data = body;
     }
 
-    console.info(
-      "[MI_BANCO => NOTIFICATION MIDDLEWARE] => ",
-      JSON.stringify(body, null, 2)
-    );
+    logger.info(body, "notification_middleware");
 
     return { message: "Solicitud recibida" };
   } catch (error) {
-    console.log("Notify Controller => ", JSON.stringify(error, null, 2));
+    logger.info(error, "notify_controller_error");
     set.status = 500;
     store!.canNotify = false;
 
@@ -81,7 +78,8 @@ export async function notifyHandler({ store, body, set }: Params) {
 
 export async function emitSSEHandler({ store, set }: Params) {
   try {
-    console.log("store?.canNotify ->", store?.canNotify);
+    logger.info(store?.canNotify, "emit_sse_can_notify");
+
     if (store?.canNotify) {
       const response = new Stream((stream) => {
         const interval = setInterval(() => {
@@ -96,15 +94,11 @@ export async function emitSSEHandler({ store, set }: Params) {
 
       store.canNotify = false;
 
-      console.info(
-        "[MI_BANCO => NOTIFICATION SSE] => ",
-        JSON.stringify(store!.data, null, 2)
-      );
+      logger.info(store!.data, "notification_sse");
 
       return response;
     }
 
-    // return { message: "OK" };
     return new Stream((stream) => {
       const interval = setInterval(() => {
         stream.send({ message: "OK" });
@@ -116,7 +110,7 @@ export async function emitSSEHandler({ store, set }: Params) {
       }, 3000);
     });
   } catch (error) {
-    console.log("SSE Controller => ", JSON.stringify(error, null, 2));
+    logger.info(error, "sse_controller_error");
     set.status = 500;
     return {
       error: "Error interno de servidor",

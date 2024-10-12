@@ -1,9 +1,12 @@
+import Logger from "../logger";
 import { getClientsDetails, getDebt, registerPayment } from "./users.service";
 
 interface Params {
   body: any;
   set: any;
 }
+
+const logger = new Logger("users");
 
 export async function getClientsDetailsHandler({ body, set }: Params) {
   try {
@@ -14,7 +17,7 @@ export async function getClientsDetailsHandler({ body, set }: Params) {
   } catch (error) {
     set.status = "Internal Server Error";
 
-    console.log("[get-client-details] =>", error);
+    logger.info(error, "get_client_details_error");
 
     return {
       status: "Internal Server Error",
@@ -32,7 +35,7 @@ export async function getDebtHandler({ body, set }: Params) {
   } catch (error) {
     set.status = "Internal Server Error";
 
-    console.log("[consulta-deuda] => ", error);
+    logger.info(error, "consulta_deuda_error");
 
     return {
       status: "Internal Server Error",
@@ -57,7 +60,7 @@ export async function registerPaymentHandler({ body, set }: Params) {
   } catch (error) {
     set.status = "Internal Server Error";
 
-    console.log("[registrar-pago] => ", error);
+    logger.info(error, "registrar_pago_error");
 
     return {
       status: "Internal Server Error",

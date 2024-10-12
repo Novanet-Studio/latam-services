@@ -1,3 +1,4 @@
+import Logger from "../logger";
 import { getBanks, getOTP, makeConfirmation, makePayment } from "./bt.service";
 
 interface Params {
@@ -5,18 +6,20 @@ interface Params {
   set: any;
 }
 
+const logger = new Logger("bancoTesoro");
+
 export async function getBanksHandler({ set }: Params) {
   try {
     const response = await getBanks();
     const json = await response.json();
 
-    console.info("[BT => BANKS] => ", JSON.stringify(json[0] || {}, null, 2));
+    logger.info(json[0] || {}, "get_banks");
 
     return json;
   } catch (error) {
     set.status = "Internal Server Error";
 
-    console.info("[BT => ERROR => BANKS] => ", JSON.stringify(error, null, 2));
+    logger.info(error, "banks_error");
 
     return {
       status: "Internal Server Error",
@@ -52,18 +55,12 @@ export async function paymentHandler({ body, set }: Params) {
       nombre: body.nombre,
     };
 
-    console.info(
-      "[BT => BOTON_DE_PAGO => PAYLOAD] => ",
-      JSON.stringify(payload, null, 2)
-    );
+    logger.info(payload, "boton_de_pago_payload");
 
     const response = await makePayment(payload);
     const json = await response.json();
 
-    console.info(
-      "[BT => BOTON_DE_PAGO => RESPONSE] => ",
-      JSON.stringify(json, null, 2)
-    );
+    logger.info(json, "boton_de_pago_response");
 
     return json;
   } catch (error) {
