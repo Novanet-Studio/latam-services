@@ -8,7 +8,7 @@
   "dependencies": {
     "@chneau/elysia-logger": "^1.0.8",
     "@elysiajs/cors": "^0.8.0",
-    "@elysiajs/stream": "^1.0.2",
+    "@elysiajs/stream": "^1.1.0",
     "@elysiajs/swagger": "^1.1.5",
     "elysia": "latest"
   },
