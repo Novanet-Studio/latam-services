@@ -1,8 +1,5 @@
-import { Elysia, t } from "elysia";
 import { Stream } from "@elysiajs/stream";
-
-const miBancoApiUrl = process.env.MIBANCO_API_URL;
-const miBancoToken = process.env.MIBANCO_TOKEN;
+import { payment, requestOTP } from "./miBanco.service";
 
 interface Params {
   body?: any;
@@ -13,20 +10,9 @@ interface Params {
   };
 }
 
-async function requestOTPController({ body, set }: Params) {
+export async function requestOTPHandler({ body, set }: Params) {
   try {
-    const response = await fetch(
-      `${miBancoApiUrl}/coremfibp/api/v1/json/bcoemi/enviar/request/otp`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${miBancoToken}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
+    const response = await requestOTP(body);
     const json = await response.json();
 
     return json;
@@ -41,20 +27,9 @@ async function requestOTPController({ body, set }: Params) {
   }
 }
 
-async function makePaymentController({ body, set }: Params) {
+export async function makePaymentHandler({ body, set }: Params) {
   try {
-    const response = await fetch(
-      `${miBancoApiUrl}/coremfibp/api/v1/json/bcoemi/enviar/ddinme`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${miBancoToken}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
+    const response = await payment(body);
     const json = await response.json();
 
     return json;
@@ -73,9 +48,8 @@ async function makePaymentController({ body, set }: Params) {
   }
 }
 
-async function notifyController({ store, body, set }: Params) {
+export async function notifyHandler({ store, body, set }: Params) {
   try {
-
     if (!store) {
       set.status = "Internal Server Error";
       return { message: "Error interno del servidor" };
@@ -87,12 +61,15 @@ async function notifyController({ store, body, set }: Params) {
       store.data = body;
     }
 
-    console.info("[MI_BANCO => NOTIFICATION MIDDLEWARE] => ", JSON.stringify(body, null, 2))
+    console.info(
+      "[MI_BANCO => NOTIFICATION MIDDLEWARE] => ",
+      JSON.stringify(body, null, 2)
+    );
 
     return { message: "Solicitud recibida" };
   } catch (error) {
     console.log("Notify Controller => ", JSON.stringify(error, null, 2));
-    set.status = 500
+    set.status = 500;
     store!.canNotify = false;
 
     return {
@@ -102,9 +79,9 @@ async function notifyController({ store, body, set }: Params) {
   }
 }
 
-async function emitSSEController({ store, set }: Params) {
+export async function emitSSEHandler({ store, set }: Params) {
   try {
-    console.log('store?.canNotify ->', store?.canNotify)
+    console.log("store?.canNotify ->", store?.canNotify);
     if (store?.canNotify) {
       const response = new Stream((stream) => {
         const interval = setInterval(() => {
@@ -119,7 +96,10 @@ async function emitSSEController({ store, set }: Params) {
 
       store.canNotify = false;
 
-      console.info("[MI_BANCO => NOTIFICATION SSE] => ", JSON.stringify(store!.data, null, 2))
+      console.info(
+        "[MI_BANCO => NOTIFICATION SSE] => ",
+        JSON.stringify(store!.data, null, 2)
+      );
 
       return response;
     }
@@ -127,7 +107,7 @@ async function emitSSEController({ store, set }: Params) {
     // return { message: "OK" };
     return new Stream((stream) => {
       const interval = setInterval(() => {
-        stream.send({ message: 'OK' });
+        stream.send({ message: "OK" });
       }, 500);
 
       setTimeout(() => {
@@ -137,19 +117,9 @@ async function emitSSEController({ store, set }: Params) {
     });
   } catch (error) {
     console.log("SSE Controller => ", JSON.stringify(error, null, 2));
-    set.status = 500
+    set.status = 500;
     return {
       error: "Error interno de servidor",
-    }
+    };
   }
 }
-
-const miBanco = new Elysia({ prefix: "/mibanco" })
-  .state("canNotify", false)
-  .state("data", null)
-  .post("/request-otp", ({ body, set }) => requestOTPController({ body, set }))
-  .post("/pay", ({ body, set }) => makePaymentController({ body, set }))
-  .post("/notify", ({ store, body, set }) => notifyController({ body, store, set }))
-  .get("/notify", ({ store, set }) => emitSSEController({ store, set }));
-
-export default miBanco;
