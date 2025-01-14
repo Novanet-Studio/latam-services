@@ -49,6 +49,8 @@ export async function makePaymentHandler({ body, set }: Params) {
 }
 
 export async function notifyHandler({ store, body, set }: Params) {
+  logger.info("<<< START notifyHandler");
+
   try {
     if (!store) {
       set.status = "Internal Server Error";
