@@ -63,8 +63,6 @@ export async function notifyHandler({ store, body, set }: Params) {
       store.data = body;
     }
 
-    console.log(`<<< body`, JSON.stringify(body));
-
     logger.info(body, "notification_middleware");
 
     return { message: "Solicitud recibida" };
@@ -81,128 +79,6 @@ export async function notifyHandler({ store, body, set }: Params) {
 }
 
 export async function emitSSEHandler({ store, set }: Params) {
-  /*
-  store = {
-    canNotify: true,
-    data: {
-      CstmrPmtStsRpt: {
-        GrpHdr: {
-          MsgId: "BTCB012025011714374211853336",
-          CreDtTm: "2025-01-17T14:37:44",
-          InitgPty: {
-            Id: {
-              PrvtId: {
-                Othr: {
-                  Id: "0071",
-                },
-              },
-            },
-          },
-        },
-        OrgnlGrpInfAndSts: {
-          OrgnlMsgId: "0001012025011718373600000000",
-          OrgnlCreDtTm: "2025-01-17T18:37:36Z",
-          OrgnlNbOfTxs: 1,
-          OrgnlCtrlSum: 5.47,
-          GrpSts: "ACCP",
-        },
-        OrgnlPmtInfAndSts: [
-          {
-            TxInfAndSts: [
-              {
-                OrgnlInstrId: "8a75417d-68cd-4e1e-8f8b-c67c0f620cc3",
-                OrgnlEndToEndId: "81692025011714373911853306",
-                TxSts: "ACCP",
-                OrgnlTxRef: {
-                  InstdAmt: {
-                    Amt: 5.47,
-                    Ccy: "VES",
-                  },
-                  IntrBkSttlmDt: "2025-01-17",
-                  IntrBkSttlmNb: 1,
-                  PmtTpInf: {
-                    LclInstrm: {
-                      Cd: "050",
-                    },
-                  },
-                  Dbtr: {
-                    Nm: "Alexander ",
-                    Id: {
-                      PrvtId: {
-                        Othr: {
-                          Id: "V3413756",
-                          SchmeNm: {
-                            Cd: "SCID",
-                          },
-                        },
-                      },
-                    },
-                  },
-                  DbtrAcct: {
-                    Prxy: {
-                      Tp: {
-                        Cd: "CELE",
-                      },
-                      Id: "04242785127",
-                    },
-                  },
-                  DbtrAgt: {
-                    FinInstnId: {
-                      ClrSysMmbId: {
-                        ClrSysId: {
-                          Cd: "NCCE",
-                        },
-                        MmbId: "0169",
-                      },
-                    },
-                  },
-                  CdtrAgt: {
-                    FinInstnId: {
-                      ClrSysMmbId: {
-                        ClrSysId: {
-                          Cd: "NCCE",
-                        },
-                        MmbId: "0169",
-                      },
-                    },
-                  },
-                  Cdtr: {
-                    Nm: "Latin American Cable",
-                    Id: {
-                      PrvtId: {
-                        Othr: {
-                          Id: "J298946229",
-                          SchmeNm: {
-                            Cd: "SRIF",
-                          },
-                        },
-                      },
-                    },
-                  },
-                  CdtrAcct: {
-                    Prxy: {
-                      Tp: {
-                        Cd: "CNTA",
-                      },
-                      Id: "01690001041000579342",
-                    },
-                  },
-                  Purp: {
-                    Cd: "002",
-                  },
-                  RmtInf: {
-                    Ustrd: "DESCRIPCION DEL COBRO",
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
-    },
-  };
-  */
-
   try {
     logger.info(store?.canNotify, "emit_sse_can_notify");
 
