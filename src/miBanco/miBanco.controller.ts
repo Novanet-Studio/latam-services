@@ -31,8 +31,7 @@ export async function requestOTPHandler({ body, set }: Params) {
 }
 
 export async function makePaymentHandler({ body, set }: Params) {
-  console.log(`<<< ON makePaymentHandler`);
-  //console.log(`<<< ON makePaymentHandler (body)`, JSON.stringify(body));
+  console.log(`<<< ON makePaymentHandler (body)`, JSON.stringify(body));
 
   try {
     const response = await payment(body);
@@ -52,8 +51,7 @@ export async function makePaymentHandler({ body, set }: Params) {
 }
 
 export async function notifyHandler({ store, body, set }: Params) {
-  console.log(`<<< ON notifyHandler`);
-  // JSON.stringify(store)
+  console.log(`<<< ON notifyHandler (body)`, JSON.stringify(body));
 
   try {
     if (!store) {
@@ -67,7 +65,7 @@ export async function notifyHandler({ store, body, set }: Params) {
       store.data = body;
     }
 
-    //logger.info(body, "notification_middleware");
+    logger.info(body, "notification_middleware");
 
     return { message: "Solicitud recibida" };
   } catch (error) {
@@ -89,7 +87,15 @@ export async function emitSSEHandler({ store, set }: Params) {
     const response = new Stream((stream) => {
       const interval = setInterval(() => {
         if (store?.canNotify) {
+          console.log(
+            `<<< TO RETURN emitSSEHandler (store) >>>`,
+            `${JSON.stringify(store)}`
+          );
+
           stream.send(`${JSON.stringify(store!.data)}`);
+
+          store.canNotify = false;
+
           stream.close();
           clearInterval(interval);
         } else {
@@ -99,6 +105,8 @@ export async function emitSSEHandler({ store, set }: Params) {
 
       setTimeout(() => {
         clearInterval(interval);
+
+        store!.canNotify = false;
 
         try {
           stream.close();
