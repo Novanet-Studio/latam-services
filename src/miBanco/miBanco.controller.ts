@@ -14,8 +14,6 @@ interface Params {
 const logger = new Logger("miBanco");
 
 export async function requestOTPHandler({ body, set }: Params) {
-  console.log(`<<< ON requestOTPHandler (body)`, JSON.stringify(body));
-
   try {
     const response = await requestOTP(body);
     const json = await response.json();
@@ -33,6 +31,9 @@ export async function requestOTPHandler({ body, set }: Params) {
 }
 
 export async function makePaymentHandler({ body, set }: Params) {
+  console.log(`<<< ON makePaymentHandler`);
+  //console.log(`<<< ON makePaymentHandler (body)`, JSON.stringify(body));
+
   try {
     const response = await payment(body);
     const json = await response.json();
@@ -51,7 +52,8 @@ export async function makePaymentHandler({ body, set }: Params) {
 }
 
 export async function notifyHandler({ store, body, set }: Params) {
-  console.log(`<<< ON notifyHandler (store)`, JSON.stringify(store));
+  console.log(`<<< ON notifyHandler`);
+  // JSON.stringify(store)
 
   try {
     if (!store) {
@@ -65,7 +67,7 @@ export async function notifyHandler({ store, body, set }: Params) {
       store.data = body;
     }
 
-    logger.info(body, "notification_middleware");
+    //logger.info(body, "notification_middleware");
 
     return { message: "Solicitud recibida" };
   } catch (error) {
@@ -81,38 +83,38 @@ export async function notifyHandler({ store, body, set }: Params) {
 }
 
 export async function emitSSEHandler({ store, set }: Params) {
-  console.log(`<<< ON emitSSEHandler (store)`, JSON.stringify(store));
-
   try {
     logger.info(store?.canNotify, "emit_sse_can_notify");
 
-    if (store?.canNotify) {
-      const response = new Stream((stream) => {
-        const interval = setInterval(() => {
-          stream.send(JSON.stringify(store!.data));
-        }, 500);
-
-        setTimeout(() => {
-          clearInterval(interval);
-          stream.close();
-        }, 3000);
-      });
-
-      store.canNotify = false;
-
-      return response;
-    }
-
-    return new Stream((stream) => {
+    const response = new Stream((stream) => {
       const interval = setInterval(() => {
-        stream.send({ message: "OK" });
+        if (store?.canNotify) {
+          stream.send(`${JSON.stringify(store!.data)}`);
+          stream.close();
+          clearInterval(interval);
+        } else {
+          stream.send(`${JSON.stringify({ message: "OK" })}`);
+        }
       }, 500);
 
       setTimeout(() => {
         clearInterval(interval);
-        stream.close();
+
+        try {
+          stream.close();
+        } catch (e) {}
       }, 3000);
     });
+
+    // Cabeceras SSE
+    set.headers = {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    };
+
+    return response;
   } catch (error) {
     logger.info(error, "sse_controller_error");
     set.status = 500;
