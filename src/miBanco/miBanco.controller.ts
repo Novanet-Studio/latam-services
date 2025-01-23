@@ -3,11 +3,11 @@ import { payment, requestOTP } from "./miBanco.service";
 import Logger from "../logger";
 
 interface Params {
+  params?: any;
   body?: any;
   set?: any;
   store?: {
-    canNotify: boolean;
-    data: Record<string, any> | null;
+    data: Record<any, any>[] | null;
   };
 }
 
@@ -31,7 +31,7 @@ export async function requestOTPHandler({ body, set }: Params) {
 }
 
 export async function makePaymentHandler({ body, set }: Params) {
-  console.log(`<<< ON makePaymentHandler (body)`, JSON.stringify(body));
+  logger.info(JSON.stringify(body), "ON makePaymentHandler (body)");
 
   try {
     const response = await payment(body);
@@ -50,8 +50,8 @@ export async function makePaymentHandler({ body, set }: Params) {
   }
 }
 
-export async function notifyHandler({ store, body, set }: Params) {
-  console.log(`<<< ON notifyHandler (body)`, JSON.stringify(body));
+export async function notifyHandler({ store, body, set }: any) {
+  logger.info(JSON.stringify(body), "ON notifyHandler (body)");
 
   try {
     if (!store) {
@@ -59,19 +59,14 @@ export async function notifyHandler({ store, body, set }: Params) {
       return { message: "Error interno del servidor" };
     }
 
-    store.canNotify = true;
-
     if (Object.entries(body).length) {
-      store.data = body;
+      store.data = store.data ? [...store.data, body] : [body];
     }
-
-    logger.info(body, "notification_middleware");
 
     return { message: "Solicitud recibida" };
   } catch (error) {
     logger.info(error, "notify_controller_error");
     set.status = 500;
-    store!.canNotify = false;
 
     return {
       status: "Internal Server Error",
@@ -80,33 +75,69 @@ export async function notifyHandler({ store, body, set }: Params) {
   }
 }
 
-export async function emitSSEHandler({ store, set }: Params) {
-  try {
-    logger.info(store?.canNotify, "emit_sse_can_notify");
+export async function emitSSEHandler({ params, store, set }: Params) {
+  const msgId = params.msgId;
+  let msg: any;
 
+  let threadFound = false;
+
+  try {
+    const source = store!.data!;
+
+    if (source.length === 0) threadFound = false;
+
+    if (source.length > 0) {
+      msg = source.find(
+        (m) => m.CstmrPmtStsRpt.OrgnlGrpInfAndSts.OrgnlMsgId === msgId
+      );
+
+      if (msg) {
+        threadFound = true;
+
+        store!.data! = source.filter(
+          (m) => m.CstmrPmtStsRpt.OrgnlGrpInfAndSts.OrgnlMsgId !== msgId
+        );
+      }
+    }
+  } catch (e) {
+    logger.info(e, "threadFound error");
+  }
+
+  try {
     const response = new Stream((stream) => {
       const interval = setInterval(() => {
-        if (store?.canNotify) {
-          console.log(
-            `<<< TO RETURN emitSSEHandler (store) >>>`,
-            `${JSON.stringify(store)}`
-          );
+        try {
+          if (threadFound) {
+            logger.info(
+              JSON.stringify(msg),
+              "RETURNED BY emitSSEHandler (msg)"
+            );
 
-          stream.send(`${JSON.stringify(store!.data)}`);
+            try {
+              stream.send(`${JSON.stringify(msg)}`);
+            } catch {
+              logger.info(msgId, "forced closure for thread");
+            }
 
-          store.canNotify = false;
+            try {
+              stream.close();
+            } catch {
+              logger.info(msgId, "forced closure for thread");
+            }
 
-          stream.close();
-          clearInterval(interval);
-        } else {
-          stream.send(`${JSON.stringify({ message: "OK" })}`);
-        }
+            clearInterval(interval);
+          } else {
+            try {
+              stream.send(`${JSON.stringify({ message: "OK" })}`);
+            } catch {
+              logger.info(msgId, "forced closure for thread");
+            }
+          }
+        } catch {}
       }, 500);
 
       setTimeout(() => {
         clearInterval(interval);
-
-        store!.canNotify = false;
 
         try {
           stream.close();
@@ -114,7 +145,6 @@ export async function emitSSEHandler({ store, set }: Params) {
       }, 3000);
     });
 
-    // Cabeceras SSE
     set.headers = {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
@@ -126,6 +156,7 @@ export async function emitSSEHandler({ store, set }: Params) {
   } catch (error) {
     logger.info(error, "sse_controller_error");
     set.status = 500;
+
     return {
       error: "Error interno de servidor",
     };
