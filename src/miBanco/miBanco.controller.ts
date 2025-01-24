@@ -2,6 +2,8 @@ import { Stream } from "@elysiajs/stream";
 import { payment, requestOTP } from "./miBanco.service";
 import Logger from "../logger";
 
+const ctrlLogger: any = process.env.CTRL_LOGGER === "true";
+
 interface Params {
   params?: any;
   body?: any;
@@ -31,7 +33,9 @@ export async function requestOTPHandler({ body, set }: Params) {
 }
 
 export async function makePaymentHandler({ body, set }: Params) {
-  logger.info(JSON.stringify(body), "ON makePaymentHandler (body)");
+  if (ctrlLogger) {
+    logger.info(JSON.stringify(body), "ON makePaymentHandler (body)");
+  }
 
   try {
     const response = await payment(body);
@@ -41,7 +45,9 @@ export async function makePaymentHandler({ body, set }: Params) {
   } catch (error) {
     set.status = "Internal Server Error";
 
-    logger.info(error, "payment_execution_error");
+    if (ctrlLogger) {
+      logger.info(error, "payment_execution_error");
+    }
 
     return {
       status: "Internal Server Error",
@@ -51,7 +57,9 @@ export async function makePaymentHandler({ body, set }: Params) {
 }
 
 export async function notifyHandler({ store, body, set }: any) {
-  logger.info(JSON.stringify(body), "ON notifyHandler (body)");
+  if (ctrlLogger) {
+    logger.info(JSON.stringify(body), "ON notifyHandler (body)");
+  }
 
   try {
     if (!store) {
@@ -108,10 +116,12 @@ export async function emitSSEHandler({ params, store, set }: Params) {
       const interval = setInterval(() => {
         try {
           if (threadFound) {
-            logger.info(
-              JSON.stringify(msg),
-              "RETURNED BY emitSSEHandler (msg)"
-            );
+            if (ctrlLogger) {
+              logger.info(
+                JSON.stringify(msg),
+                "RETURNED BY emitSSEHandler (msg)"
+              );
+            }
 
             try {
               stream.send(`${JSON.stringify(msg)}`);
