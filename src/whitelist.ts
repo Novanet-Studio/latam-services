@@ -2,6 +2,7 @@ import Elysia from "elysia";
 
 const whitelist: string[] = process.env.WHITELIST?.split(",") || [];
 const ctrlLogger: any = process.env.CTRL_LOGGER === "true";
+const ctrlAllAccess = process.env.CTRL_ALL_ACCESS === "true";
 
 export const whitelistMiddleware = (app: Elysia) =>
   app.on("request", ({ request: req, set }) => {
@@ -14,7 +15,11 @@ export const whitelistMiddleware = (app: Elysia) =>
       console.log(`<<< ipOrigin >>>`, ipOrigin);
     }
 
-    if (!whitelist.includes(urlOrigin) && !whitelist.includes(ipOrigin)) {
+    if (
+      !whitelist.includes(urlOrigin) &&
+      !whitelist.includes(ipOrigin) &&
+      ctrlAllAccess === false
+    ) {
       set.status = 403;
       return { error: "Access denied. Ip not allowed." };
     }
