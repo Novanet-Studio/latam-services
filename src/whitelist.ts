@@ -6,11 +6,9 @@ export const whitelistMiddleware = (app: Elysia) =>
   app.on("request", ({ request: req, set }) => {
     console.log(`<<< req >>>`, req);
 
-    const h: string = req.headers.get("host");
+    const origin: string = req.headers.get("origin");
 
-    console.log(`<<< h >>>`, h);
-
-    if (!whitelist.includes(h)) {
+    if (!whitelist.includes(origin)) {
       set.status = 403;
       return { error: "Access denied. Ip not allowed." };
     }
