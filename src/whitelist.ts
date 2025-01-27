@@ -11,8 +11,6 @@ export const whitelistMiddleware = (app: Elysia) =>
 
     if (ctrlLogger) {
       console.log(`<<< req >>>`, req);
-      console.log(`<<< urlOrigin >>>`, urlOrigin);
-      console.log(`<<< ipOrigin >>>`, ipOrigin);
     }
 
     if (
@@ -26,5 +24,3 @@ export const whitelistMiddleware = (app: Elysia) =>
   });
 
 export default whitelistMiddleware;
-
-// git commit -m "fe

@@ -4,7 +4,7 @@ import { swagger } from "@elysiajs/swagger";
 import { cors } from "@elysiajs/cors";
 
 import routes from "./routes";
-//import { whitelistMiddleware as whitelist } from "./whitelist";
+import { whitelistMiddleware as whitelist } from "./whitelist";
 
 const port = Number(process.env.PORT) || 8001;
 
@@ -15,7 +15,7 @@ app.use(logger());
 app.use(swagger());
 
 // Whitelist
-// app.use(whitelist);
+app.use(whitelist);
 
 // Routes
 app.use(routes);
