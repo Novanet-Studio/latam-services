@@ -9,10 +9,6 @@ export const whitelistMiddleware = (app: Elysia) =>
     const urlOrigin: string = req.headers.get("origin") || "";
     const ipOrigin: string = req.headers.get("x-forwarded-for") || "";
 
-    if (ctrlLogger) {
-      console.log(`<<< req >>>`, req);
-    }
-
     if (
       !whitelist.includes(urlOrigin) &&
       !whitelist.includes(ipOrigin) &&

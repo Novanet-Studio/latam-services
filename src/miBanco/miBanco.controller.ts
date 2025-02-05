@@ -33,10 +33,6 @@ export async function requestOTPHandler({ body, set }: Params) {
 }
 
 export async function makePaymentHandler({ body, set }: Params) {
-  if (ctrlLogger) {
-    logger.info(JSON.stringify(body), "ON makePaymentHandler (body)");
-  }
-
   try {
     const response = await payment(body);
     const json = await response.json();
