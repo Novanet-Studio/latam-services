@@ -2,12 +2,14 @@ import { Stream } from "@elysiajs/stream";
 import { payment, requestOTP } from "./miBanco.service";
 import Logger from "../logger";
 
+const ctrlLogger: any = process.env.CTRL_LOGGER === "true";
+
 interface Params {
+  params?: any;
   body?: any;
   set?: any;
   store?: {
-    canNotify: boolean;
-    data: Record<string, any> | null;
+    data: Record<any, any>[] | null;
   };
 }
 
@@ -39,7 +41,9 @@ export async function makePaymentHandler({ body, set }: Params) {
   } catch (error) {
     set.status = "Internal Server Error";
 
-    logger.info(error, "payment_execution_error");
+    if (ctrlLogger) {
+      logger.info(error, "payment_execution_error");
+    }
 
     return {
       status: "Internal Server Error",
@@ -48,26 +52,25 @@ export async function makePaymentHandler({ body, set }: Params) {
   }
 }
 
-export async function notifyHandler({ store, body, set }: Params) {
+export async function notifyHandler({ store, body, set }: any) {
+  if (ctrlLogger) {
+    logger.info(JSON.stringify(body), "ON notifyHandler (body)");
+  }
+
   try {
     if (!store) {
       set.status = "Internal Server Error";
       return { message: "Error interno del servidor" };
     }
 
-    store.canNotify = true;
-
     if (Object.entries(body).length) {
-      store.data = body;
+      store.data = store.data ? [...store.data, body] : [body];
     }
-
-    logger.info(body, "notification_middleware");
 
     return { message: "Solicitud recibida" };
   } catch (error) {
     logger.info(error, "notify_controller_error");
     set.status = 500;
-    store!.canNotify = false;
 
     return {
       status: "Internal Server Error",
@@ -76,42 +79,90 @@ export async function notifyHandler({ store, body, set }: Params) {
   }
 }
 
-export async function emitSSEHandler({ store, set }: Params) {
+export async function emitSSEHandler({ params, store, set }: Params) {
+  const msgId = params.msgId;
+  let msg: any;
+
+  let threadFound = false;
+
   try {
-    logger.info(store?.canNotify, "emit_sse_can_notify");
+    const source = store!.data!;
 
-    if (store?.canNotify) {
-      const response = new Stream((stream) => {
-        const interval = setInterval(() => {
-          stream.send(JSON.stringify(store!.data));
-        }, 500);
+    if (source.length === 0) threadFound = false;
 
-        setTimeout(() => {
-          clearInterval(interval);
-          stream.close();
-        }, 3000);
-      });
+    if (source.length > 0) {
+      msg = source.find(
+        (m) => m.CstmrPmtStsRpt.OrgnlGrpInfAndSts.OrgnlMsgId === msgId
+      );
 
-      store.canNotify = false;
+      if (msg) {
+        threadFound = true;
 
-      logger.info(store!.data, "notification_sse");
-
-      return response;
+        store!.data! = source.filter(
+          (m) => m.CstmrPmtStsRpt.OrgnlGrpInfAndSts.OrgnlMsgId !== msgId
+        );
+      }
     }
+  } catch (e) {
+    logger.info(e, "threadFound error");
+  }
 
-    return new Stream((stream) => {
+  try {
+    const response = new Stream((stream) => {
       const interval = setInterval(() => {
-        stream.send({ message: "OK" });
+        try {
+          if (threadFound) {
+            if (ctrlLogger) {
+              logger.info(
+                JSON.stringify(msg),
+                "RETURNED BY emitSSEHandler (msg)"
+              );
+            }
+
+            try {
+              stream.send(`${JSON.stringify(msg)}`);
+            } catch {
+              logger.info(msgId, "forced closure for thread");
+            }
+
+            try {
+              stream.close();
+            } catch {
+              logger.info(msgId, "forced closure for thread");
+            }
+
+            clearInterval(interval);
+          } else {
+            try {
+              stream.send(`${JSON.stringify({ message: "OK" })}`);
+            } catch {
+              logger.info(msgId, "forced closure for thread");
+            }
+          }
+        } catch {}
       }, 500);
 
       setTimeout(() => {
         clearInterval(interval);
-        stream.close();
+
+        try {
+          stream.close();
+        } catch (e) {}
       }, 3000);
     });
+
+    set.headers = {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    };
+
+    return response;
   } catch (error) {
     logger.info(error, "sse_controller_error");
     set.status = 500;
+
     return {
       error: "Error interno de servidor",
     };

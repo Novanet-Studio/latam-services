@@ -8,12 +8,11 @@ import {
 
 const miBancoRouter = new Elysia();
 
-miBancoRouter.state("canNotify", false);
-miBancoRouter.state("data", null);
+miBancoRouter.state("data", []);
 
 miBancoRouter.post("/request-otp", requestOTPHandler);
 miBancoRouter.post("/pay", makePaymentHandler);
 miBancoRouter.post("/notify", notifyHandler);
-miBancoRouter.get("/notify", emitSSEHandler);
+miBancoRouter.get("/notify/:msgId", emitSSEHandler);
 
 export default miBancoRouter;
